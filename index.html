@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deckard</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="deck.css" />
+  <script src="deck.js" defer></script>
+</head>
+<body>
+<s-deck fine="©2026 Ta marque. Tous droits réservés.">
+
+  <s-slide>
+    <s-top>
+      <s-logo>LogoName</s-logo>
+      <s-pill>Présentation</s-pill>
+      <s-pill push>Notre projet</s-pill>
+      <s-arrow></s-arrow>
+    </s-top>
+    <s-title>Migration GCP</s-title>
+    <s-text small>Présenté par <b>Adrien</b></s-text>
+    <s-foot>
+      <s-info label="Contact">contact@exemple.fr</s-info>
+      <s-info label="Date">Septembre 2026</s-info>
+      <s-info label="Site">www.exemple.fr</s-info>
+    </s-foot>
+  </s-slide>
+
+  <s-slide tag="Prévision de coûts">
+    <s-trend>
+      Mois 1  | 800 €  | Staging seul, trafic miroir.
+      Mois 3  | 2k €   | Base migrée, API en double run.
+      Mois 6  | 5k €   | Tout le trafic sur GCP.
+      Mois 12 | 8k €   | Nouvelles régions et analytics.
+    </s-trend>
+  </s-slide>
+
+  <s-slide tag="Indicateurs">
+    <s-grid>
+      <s-stat value="182 ms" label="latence p95" delta="−38%"></s-stat>
+      <s-stat value="99,95%" label="disponibilité" delta="+0,4 pt"></s-stat>
+      <s-stat value="1 240 €" label="coût mensuel" delta="−22%"></s-stat>
+    </s-grid>
+  </s-slide>
+
+  <s-slide tag="Architecture cible">
+    <s-flow>
+      <s-node sub="Web + mobile">Client</s-node>
+      <s-node sub="HTTPS, Cloud Armor">Load Balancer</s-node>
+      <s-node sub="API, autoscaling">Cloud Run</s-node>
+      <s-node sub="PostgreSQL 16">Cloud SQL</s-node>
+    </s-flow>
+    <s-foot>
+      <s-heading>Architecture</s-heading>
+      <s-text small right>Région europe-west9, services managés uniquement.</s-text>
+    </s-foot>
+  </s-slide>
+
+  <s-slide tag="Coût mensuel estimé">
+    <s-price currency="€" period="/ mois">
+      Cloud Run        | 320   | 2 vCPU, 4 Go, min 1 instance
+      Cloud SQL        | 540   | db-custom-2-8192, HA
+      Load Balancer    | 180   | règles + trafic sortant
+      Cloud Storage    | 45    | 1,5 To Standard
+      Monitoring       | 155   | logs + métriques
+    </s-price>
+  </s-slide>
+
+  <s-slide tag="Comparaison de prix">
+    <s-bars unit="€ / mois" highlight="GCP">
+      GCP   | 1240
+      AWS   | 1480
+      Azure | 1395
+    </s-bars>
+    <s-foot>
+      <s-heading>Même charge, trois clouds</s-heading>
+    </s-foot>
+  </s-slide>
+
+  <s-slide tag="Benchmark">
+    <s-scatter x="Difficulté de mise en place (1 à 10)" y="Prix (€ / mois)" x-max="10"
+               highlight="Cloud Run"
+               quadrants="Simple mais cher | Complexe et cher | Simple et abordable | Complexe mais abordable">
+      Cloud Run        | 2   | 320
+      App Engine       | 3   | 410
+      GKE Autopilot    | 6   | 780
+      GKE Standard     | 8   | 620
+      Compute Engine   | 7   | 290 | left
+      Cloud Functions  | 1.5 | 140
+    </s-scatter>
+  </s-slide>
+
+  <s-slide tag="Latence p95">
+    <s-vbars unit="ms" highlight="Cloud Run">
+      Actuel         | 294
+      Cloud Run      | 182
+      GKE Autopilot  | 165
+      App Engine     | 240
+    </s-vbars>
+    <s-foot>
+      <s-heading>Performance</s-heading>
+      <s-text small right>Test de charge, 500 req/s pendant 10 minutes.</s-text>
+    </s-foot>
+  </s-slide>
+
+  <s-slide tag="Répartition des coûts">
+    <s-share unit="€">
+      Cloud SQL      | 540
+      Cloud Run      | 320
+      Load Balancer  | 180
+      Monitoring     | 155
+      Cloud Storage  | 45
+    </s-share>
+  </s-slide>
+
+  <s-slide tag="Matrice de comparaison">
+    <s-matrix highlight="GCP">
+      Critère                 | GCP     | AWS     | Azure
+      Région Paris            | oui     | oui     | oui
+      Serverless conteneurs   | oui     | partiel | oui
+      PostgreSQL managé HA    | oui     | oui     | oui
+      Crédits startup         | oui     | oui     | non
+      Équipe déjà formée      | partiel | non     | non
+    </s-matrix>
+  </s-slide>
+
+  <s-slide tag="Instances">
+    <s-table highlight="Prix / h">
+      Machine        | vCPU | RAM    | Prix / h
+      e2-standard-2  | 2    | 8 Go   | 0,076 €
+      e2-standard-4  | 4    | 16 Go  | 0,152 €
+      n2-standard-4  | 4    | 16 Go  | 0,213 €
+    </s-table>
+    <s-callout type="warn">Les prix varient selon la région et les engagements d'utilisation.</s-callout>
+  </s-slide>
+
+  <s-slide tag="Infra as code">
+    <s-code file="main.tf">
+      resource "google_cloud_run_v2_service" "api" {
+        name     = "api"
+        location = "europe-west9"
+      }
+    </s-code>
+  </s-slide>
+
+  <s-slide tag="Plan de migration" tone="dark">
+    <s-roadmap>
+      <s-phase label="Phase 1">Staging sur GCP, trafic miroir.</s-phase>
+      <s-phase label="Phase 2">Bascule de la base avec Database Migration Service.</s-phase>
+      <s-phase label="Phase 3">Bascule DNS.</s-phase>
+      <s-phase label="Phase 4">Ancien cloud en lecture seule 30 jours.</s-phase>
+    </s-roadmap>
+    <s-foot>
+      <s-heading>Roadmap</s-heading>
+      <s-text small right>Rollback possible à chaque phase. Aucune coupure prévue côté utilisateurs.</s-text>
+    </s-foot>
+  </s-slide>
+
+  <s-slide tag="Fin" layout="bottom" once>
+    <s-title>Questions ?</s-title>
+  </s-slide>
+
+</s-deck>
+</body>
+</html>

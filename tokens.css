@@ -1,0 +1,60 @@
+/* Tokens du deck : remplace ces valeurs par celles de ta maquette Figma. */
+:root {
+  --deck-frame: #b8b9b4;
+  --deck-frame-size: 10px;
+
+  --deck-bg: #f2f2f0;
+  --deck-fg: #111111;
+  --deck-muted: #6e6e6b;
+  --deck-line: #d6d6d2;
+  --deck-accent: #111111;
+  --deck-surface: #e7e7e4;
+  --deck-dim: #b4b4b0;
+  --deck-positive: #2f6b3a;
+  --deck-negative: #9b2c2c;
+  --deck-warning: #8a5a00;
+  --deck-series-1: #111111;
+  --deck-series-2: #4f4f4d;
+  --deck-series-3: #868682;
+  --deck-series-4: #b4b4b0;
+  --deck-series-5: #d3d3cf;
+
+  --deck-font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --deck-font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --deck-font-code: ui-monospace, Menlo, monospace;
+
+  --deck-size-title: clamp(3rem, 11vw, 10rem);
+  --deck-size-heading: clamp(2.25rem, 6vw, 5.5rem);
+  --deck-size-stat: clamp(1.75rem, 3.2vw, 3rem);
+  --deck-size-body: clamp(0.95rem, 1.2vw, 1.125rem);
+  --deck-size-small: 0.8125rem;
+  --deck-size-fine: 0.625rem;
+  --deck-tracking-display: -0.035em;
+
+  --deck-pad: clamp(1.25rem, 3.5vw, 3.5rem);
+  --deck-gap: clamp(1rem, 2.5vw, 2.5rem);
+  --deck-max: 90rem;
+  --deck-radius: 0;
+  --deck-radius-pill: 999px;
+
+  --deck-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --deck-duration: 700ms;
+  --deck-stagger: 70ms;
+  --deck-reveal-distance: 1.25rem;
+}
+
+/* Slide sombre : <s-slide tone="dark"> */
+[tone="dark"] {
+  --deck-bg: #0b0b0b;
+  --deck-fg: #f2f2f0;
+  --deck-muted: #a3a3a0;
+  --deck-line: #2e2e2e;
+  --deck-accent: #f2f2f0;
+  --deck-surface: #1c1c1c;
+  --deck-dim: #555553;
+  --deck-series-1: #f2f2f0;
+  --deck-series-2: #b9b9b6;
+  --deck-series-3: #868682;
+  --deck-series-4: #5a5a58;
+  --deck-series-5: #3a3a39;
+}
