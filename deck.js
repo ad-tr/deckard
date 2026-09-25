@@ -1,6 +1,6 @@
 /*
   Deckard : composants de présentation. Voir index.html pour l'usage de chacun.
-  API : deck.next(), deck.prev(), deck.go(index), deck.fit() (réajuste les slides après un changement de contenu),
+  API : deck.next(), deck.prev(), deck.go(index), deck.fit(slide?) (réajuste une slide ou toutes après un changement de contenu),
         deck.refresh() (après ajout ou retrait de slides), deck.edit() (ouvre ou ferme l'éditeur, touche « e »)
   Événement : "slidechange" avec detail { index, slide }
 */
@@ -351,7 +351,7 @@ define('s-slide', (slide) => {
     const pill = document.createElement('s-pill');
     pill.textContent = slide.getAttribute('tag');
     top.append(document.createElement('s-arrow'), pill);
-    const fine = slide.closest('s-deck')?.getAttribute('fine');
+    const fine = (slide.closest('s-deck') ?? document.querySelector('s-deck'))?.getAttribute('fine');
     if (fine) top.append(Object.assign(document.createElement('s-fine'), { textContent: fine }));
     top.lastChild.toggleAttribute('push', !!fine);
     slide.prepend(top);
@@ -441,7 +441,7 @@ class SDeck extends Base {
     const target = this.slides[Math.max(0, Math.min(i, this.slides.length - 1))];
     target?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'start' });
   }
-  fit() { this.slides.forEach(fit); }
+  fit(slide) { (slide ? [slide] : this.slides).forEach(fit); }
   next() { this.go(this.index + 1); }
   prev() { this.go(this.index - 1); }
 

@@ -865,19 +865,55 @@
   };
 
   const labelOf = (slide) => slide.getAttribute('tag') || slide.querySelector('s-title, s-heading')?.textContent.trim() || 'Sans titre';
+  // ---------- Miniatures ----------
+  // Chaque miniature est un vrai rendu de la slide, au format de l'écran de présentation, réduit.
+  // Elles sont mises en cache et ne sont refaites que si la slide a changé.
+  const thumbs = new Map(); // data-eid -> { key, stage }
+  const thumbKey = (slide) => `${innerWidth}x${innerHeight}|${src.getAttribute('fine')}|${slide.outerHTML}`;
+  const renderThumb = (slide) => {
+    const stage = h('div', { class: 'ed-thumb-stage', 'data-deck-scope': '' });
+    stage.style.setProperty('--deck-u', `${Math.min(innerWidth / 100, (1.778 * innerHeight) / 100)}px`);
+    const copy = document.importNode(slide, true);
+    [copy, ...copy.querySelectorAll('[data-eid]')].forEach((n) => n.removeAttribute('data-eid'));
+    copy.setAttribute('data-active', '');
+    copy.setAttribute('once', '');
+    stage.append(copy);
+    return stage;
+  };
+  const updateThumbs = debounce(() => {
+    if (!active) return;
+    for (const box of ui.rail.querySelectorAll('.ed-thumb')) {
+      const slide = byId(box.dataset.for);
+      if (!slide) continue;
+      const key = thumbKey(slide);
+      if (thumbs.get(slide.dataset.eid)?.key === key) continue;
+      const stage = renderThumb(slide);
+      thumbs.set(slide.dataset.eid, { key, stage });
+      box.replaceChildren(stage);
+      deck.fit(stage.firstElementChild);
+    }
+  }, 300);
+
   const refreshRail = () => {
     const current = deck.slides[deck.index]?.dataset.eid;
     const selectedSlide = slideOf(byId(selected))?.dataset.eid;
+    const fresh = [];
     ui.rail.replaceChildren(...[...src.children].map((slide, i) => {
       const id = slide.dataset.eid;
+      // Miniature en cache (même si elle est périmée : elle sera refaite juste après)
+      let cached = thumbs.get(id);
+      if (!cached) {
+        cached = { key: thumbKey(slide), stage: renderThumb(slide) };
+        thumbs.set(id, cached);
+        fresh.push(cached.stage);
+      }
       const item = h('div', {
         class: `ed-slide ${id === current ? 'current' : ''} ${id === selectedSlide ? 'selected' : ''}`,
-        draggable: 'true', 'data-eid': id, title: 'Glisser pour réordonner',
+        draggable: 'true', 'data-eid': id, title: `${labelOf(slide)} : glisser pour réordonner`,
         onclick: () => { deck.go(i); selectId(id); },
       },
       h('span', { class: 'ed-slide-num' }, String(i + 1).padStart(2, '0')),
-      h('span', { class: 'ed-slide-label' }, labelOf(slide)),
-      slide.getAttribute('tone') === 'dark' ? h('span', { class: 'ed-slide-dark', title: 'Fond sombre' }) : null);
+      h('div', { class: 'ed-thumb', 'data-for': id }, cached.stage));
       item.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/x-deckard-slide', id); e.dataTransfer.effectAllowed = 'move'; item.classList.add('dragging'); });
       item.addEventListener('dragend', () => item.classList.remove('dragging'));
       item.addEventListener('dragover', (e) => {
@@ -899,6 +935,16 @@
       });
       return item;
     }));
+    // Échelle et format des miniatures : l'écran de présentation réduit à la largeur de la liste
+    const box = ui.rail.querySelector('.ed-thumb');
+    if (box) {
+      ui.rail.style.setProperty('--thumb-ratio', `${innerWidth} / ${innerHeight}`);
+      ui.rail.style.setProperty('--thumb-w', `${innerWidth}px`);
+      ui.rail.style.setProperty('--thumb-h', `${innerHeight}px`);
+      ui.rail.style.setProperty('--thumb-scale', box.clientWidth / innerWidth);
+    }
+    fresh.forEach((stage) => deck.fit(stage.firstElementChild));
+    updateThumbs();
   };
 
   const refreshToolbar = () => {
@@ -1115,13 +1161,25 @@
     build();
     deck.addEventListener('pointerdown', onPointerDown);
     deck.addEventListener('dblclick', onDoubleClick);
-    deck.addEventListener('slidechange', () => active && refreshRail());
+    deck.addEventListener('slidechange', () => {
+      if (!active) return;
+      refreshRail();
+      // La miniature de la slide affichée reste visible dans la liste
+      const item = ui.rail.querySelector('.ed-slide.current');
+      const rail = ui.rail;
+      if (!item) return;
+      if (item.offsetTop < rail.scrollTop) rail.scrollTop = item.offsetTop - 8;
+      else if (item.offsetTop + item.offsetHeight > rail.scrollTop + rail.clientHeight) rail.scrollTop = item.offsetTop + item.offsetHeight - rail.clientHeight + 8;
+    });
     addEventListener('pointermove', onPointerMove);
     addEventListener('pointerup', onPointerUp);
     addEventListener('keydown', onKey);
     addEventListener('dragover', onFileDrag);
     addEventListener('drop', onFileDrop);
     addEventListener('dragleave', onFileLeave);
+    // Une image chargée dans une miniature change sa hauteur ; la fenêtre redimensionnée change leur format
+    ui.rail.addEventListener('load', (e) => e.target.closest?.('s-slide') && deck.fit(e.target.closest('s-slide')), true);
+    addEventListener('resize', debounce(() => active && refreshRail(), 200));
     // Premier rendu : les slides affichées reçoivent leur data-eid
     renderAll();
   };
