@@ -71,9 +71,14 @@ s-stat .s-stat-label { color: var(--deck-muted); }
 s-quote { display: block; }
 s-quote blockquote { margin: 0; font-family: var(--deck-font-display); font-size: var(--deck-size-heading); line-height: 1.2; }
 s-quote figcaption { margin-top: var(--deck-gap); color: var(--deck-muted); font-size: var(--deck-size-small); font-family: var(--deck-font-body); text-transform: uppercase; letter-spacing: 0.08em; }
-s-image { display: block; }
+s-image { display: block; min-width: 0; }
 s-image figure { margin: 0; }
-s-image img { display: block; width: 100%; height: auto; border-radius: var(--deck-radius); }
+s-image img { display: block; max-width: 100%; max-height: 62dvh; border-radius: var(--deck-radius); }
+s-image[ratio] .s-image-frame { aspect-ratio: var(--ratio); max-height: 62dvh; }
+s-image[ratio] img { width: 100%; height: 100%; max-height: none; object-fit: cover; }
+s-image[fit="contain"] img { object-fit: contain; }
+s-image[missing] .s-image-frame { display: grid; place-items: center; aspect-ratio: var(--ratio, 16 / 9); max-height: 62dvh; padding: var(--deck-gap); border: 1px dashed var(--deck-dim); border-radius: var(--deck-radius); background: var(--deck-surface); }
+.s-image-missing { color: var(--deck-muted); font-size: var(--deck-size-small); text-align: center; }
 s-image figcaption { margin-top: 0.75rem; color: var(--deck-muted); font-size: var(--deck-size-small); }
 
 /* Tech : tableau, matrice */
@@ -83,7 +88,13 @@ s-table th, s-matrix th { text-align: left; font-family: var(--deck-font-body); 
 s-table th, s-table td, s-matrix th, s-matrix td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--deck-line); }
 s-table .num { text-align: right; }
 s-table td.num { font-variant-numeric: tabular-nums; font-family: var(--deck-font-body); }
-s-matrix .mark { text-align: center; }
+s-matrix .mark, s-matrix .num { text-align: center; }
+s-matrix td.num { font-variant-numeric: tabular-nums; }
+s-matrix .score { text-align: center; font-variant-numeric: tabular-nums; }
+.s-score-value { display: block; font-weight: 500; }
+.s-score-gauge { display: block; width: min(100%, 5rem); height: 0.3rem; margin: 0.4rem auto 0; background: var(--deck-line); border-radius: 999px; overflow: hidden; }
+.s-score-gauge::before { content: ""; display: block; height: 100%; width: 0; background: var(--deck-accent); transition: width 1s var(--deck-ease) 200ms; }
+s-slide[data-active] .s-score-gauge::before, s-slide [reveal="none"] .s-score-gauge::before { width: calc(var(--v) * 100%); }
 s-matrix th:not(:first-child) { text-align: center; }
 s-table .hl, s-matrix .hl { background: var(--deck-surface); color: var(--deck-fg); }
 
@@ -227,7 +238,7 @@ s-slide [reveal="none"], s-slide[data-active] [reveal] { opacity: 1; transform: 
   s-deck { scroll-behavior: auto; }
   s-slide [reveal] { transition: none; opacity: 1; transform: none; }
   .s-bar-fill { transition: none; }
-  .s-point-dot, .s-point-label, .s-vbar-fill, .s-share-bar { transition: none; }
+  .s-point-dot, .s-point-label, .s-vbar-fill, .s-share-bar, .s-score-gauge::before { transition: none; }
 }
 @media print {
   s-deck { height: auto; overflow: visible; }
@@ -238,5 +249,6 @@ s-slide [reveal="none"], s-slide[data-active] [reveal] { opacity: 1; transform: 
   .s-point-dot { transform: translate(-50%, -50%); }
   .s-point-label { opacity: 1; }
   .s-share-bar { clip-path: none; }
+  .s-score-gauge::before { width: calc(var(--v) * 100%); }
   .s-progress, .s-counter { display: none; }
 }

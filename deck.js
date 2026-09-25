@@ -46,11 +46,27 @@ define('s-quote', (c) => {
   c.append(figure);
 });
 
+// Image : src, alt, caption. ratio="16/9" recadre (fit="contain" pour ne rien couper).
+// Sans src ou si le fichier est introuvable, un cadre « À compléter » prend sa place.
 define('s-image', (c) => {
   const figure = el('figure');
-  figure.append(Object.assign(document.createElement('img'), { src: c.getAttribute('src'), alt: c.getAttribute('alt') ?? '', loading: 'lazy' }));
+  const frame = el('div', 's-image-frame');
+  const alt = c.getAttribute('alt') ?? '';
+  const ratio = c.getAttribute('ratio');
+  if (ratio) frame.style.setProperty('--ratio', ratio.replace(':', '/'));
+  const missing = () => {
+    c.setAttribute('missing', '');
+    frame.replaceChildren(el('span', 's-image-missing', alt ? `À compléter : ${alt}` : 'Image à compléter'));
+  };
+  const src = c.getAttribute('src');
+  if (src) {
+    const img = Object.assign(document.createElement('img'), { src, alt, loading: 'lazy', decoding: 'async' });
+    img.addEventListener('error', missing, { once: true });
+    frame.append(img);
+  } else missing();
+  figure.append(frame);
   if (c.hasAttribute('caption')) figure.append(el('figcaption', '', c.getAttribute('caption')));
-  c.append(figure);
+  c.replaceChildren(figure);
 });
 
 // Syntaxe "a | b | c" : une ligne = une rangée, les lignes "---|---" sont ignorées
@@ -64,23 +80,37 @@ const format = (n) => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
 const isNumeric = (t) => /^[-+−]?[€$£]?\s?\d[\d\s.,]*\s?[%€$£a-zA-Z/]{0,6}$/.test(t);
 
 // Tableau et matrice : même syntaxe, la matrice remplace oui / non / partiel par des symboles
+// et, avec max="5", affiche les chiffres comme des scores (valeur + jauge)
 const MARKS = { yes: '✓', oui: '✓', no: '✕', non: '✕', partial: '◐', partiel: '◐' };
 const MARK_TEXT = { '✓': 'oui', '✕': 'non', '◐': 'partiel' };
 const markOf = (text) => (Object.hasOwn(MARKS, text.toLowerCase()) ? MARKS[text.toLowerCase()] : null);
+// Part du score entre 0 et 1 ("4" sur 5 -> 0,8), null si la cellule n'est pas un nombre
+const scoreOf = (text, max) => {
+  if (!(max > 0) || !isNumeric(text)) return null;
+  return Math.min(1, Math.max(0, toNumber(text) / max));
+};
 const renderTable = (c, matrix) => {
   const [head = [], ...body] = rows(c);
   const highlight = head.indexOf(c.getAttribute('highlight'));
+  const max = toNumber(c.getAttribute('max') ?? '');
   const numeric = head.map((_, i) => !matrix && body.length > 0 && body.every((r) => isNumeric(r[i] ?? '')));
   const row = (cells, tag) => {
     const tr = document.createElement('tr');
     cells.forEach((text, i) => {
-      const mark = matrix && i > 0 && markOf(text);
-      const cell = el(tag, '', mark ? '' : text);
+      const mark = matrix && i > 0 && tag === 'td' && markOf(text);
+      const score = matrix && i > 0 && tag === 'td' && !mark ? scoreOf(text, max) : null;
+      const cell = el(tag, '', mark || score !== null ? '' : text);
       if (mark) {
         cell.className = 'mark';
         cell.title = text;
         cell.append(Object.assign(el('span', '', mark), { ariaHidden: 'true' }), el('span', 's-sr', MARK_TEXT[mark]));
-      } else if (numeric[i]) cell.className = 'num';
+      } else if (score !== null) {
+        cell.className = 'score';
+        cell.title = `${text} / ${format(max)}`;
+        const gauge = Object.assign(el('span', 's-score-gauge'), { ariaHidden: 'true' });
+        gauge.style.setProperty('--v', score);
+        cell.append(el('span', 's-score-value', text), el('span', 's-sr', ` sur ${format(max)}`), gauge);
+      } else if (numeric[i] || (matrix && i > 0 && tag === 'td' && isNumeric(text))) cell.className = 'num';
       if (i === highlight) cell.classList.add('hl');
       tr.append(cell);
     });
@@ -396,4 +426,4 @@ class SDeck extends Base {
 
 globalThis.customElements?.define('s-deck', SDeck);
 
-if (typeof module === 'object') module.exports = { rows, toNumber, toAmount, isNumeric, niceMax, markOf };
+if (typeof module === 'object') module.exports = { rows, toNumber, toAmount, isNumeric, niceMax, markOf, scoreOf };

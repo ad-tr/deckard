@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { rows, toNumber, toAmount, isNumeric, niceMax, markOf } from './deck.js';
+import { rows, toNumber, toAmount, isNumeric, niceMax, markOf, scoreOf } from './deck.js';
 
 const block = (text) => ({ textContent: text });
 
@@ -75,5 +75,24 @@ describe('markOf', () => {
     expect(markOf('constructor')).toBeNull();
     expect(markOf('toString')).toBeNull();
     expect(markOf('peut-être')).toBeNull();
+  });
+});
+
+describe('scoreOf', () => {
+  test('part du score sur le maximum', () => {
+    expect(scoreOf('4', 5)).toBe(0.8);
+    expect(scoreOf('3,5', 5)).toBe(0.7);
+    expect(scoreOf('80 %', 100)).toBe(0.8);
+  });
+
+  test('borne entre 0 et 1', () => {
+    expect(scoreOf('7', 5)).toBe(1);
+    expect(scoreOf('−2', 5)).toBe(0);
+  });
+
+  test('texte ou maximum absent', () => {
+    expect(scoreOf('oui', 5)).toBeNull();
+    expect(scoreOf('4', 0)).toBeNull();
+    expect(scoreOf('4', NaN)).toBeNull();
   });
 });

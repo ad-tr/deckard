@@ -9,6 +9,7 @@ Tu vas écrire une présentation avec **Deckard**, une petite librairie de compo
 ## Fichiers
 
 - `index.html` : **le seul fichier que tu écris.** Il contient les slides.
+- `images/` : les images utilisées par les slides (optionnel).
 - `tokens.css` : couleurs, polices, tailles. Ne pas modifier sauf demande explicite.
 - `deck.css` / `deck.js` : la librairie. Ne jamais modifier.
 
@@ -130,7 +131,7 @@ L'attribut `push` sur n'importe quel élément de `<s-top>` le pousse à droite,
 | `<s-grid>` | Grille qui s'adapte (cartes, chiffres) |
 | `<s-list>` + `<s-item>` | Liste. `numbered` pour la numéroter |
 | `<s-card heading="Titre">texte</s-card>` | Carte avec titre |
-| `<s-image src="" alt="" caption="">` | Image avec légende |
+| `<s-image src="" alt="" caption="">` | Image avec légende (voir « Images ») |
 
 ### Chiffres et données
 
@@ -144,9 +145,25 @@ L'attribut `push` sur n'importe quel élément de `<s-top>` le pousse à droite,
 | `<s-scatter>` | `libellé \| x \| y` (+ `\| left` optionnel) | `x`, `y` (noms des axes), `x-max`, `y-max`, `highlight`, `quadrants`, `x-split`, `y-split` |
 | `<s-price>` | `libellé \| montant \| note` | `currency` (défaut €), `period`, `total-label`. Total calculé |
 | `<s-table>` | 1re ligne = en-têtes | `highlight="Nom de colonne"`. Chiffres alignés à droite automatiquement |
-| `<s-matrix>` | 1re ligne = en-têtes | `highlight="Nom de colonne"`. `oui`/`non`/`partiel` (ou `yes`/`no`/`partial`) deviennent ✓ ✕ ◐ |
+| `<s-matrix>` | 1re ligne = en-têtes | `highlight="Nom de colonne"`, `max`. `oui`/`non`/`partiel` (ou `yes`/`no`/`partial`) deviennent ✓ ✕ ◐. Les chiffres restent des chiffres ; avec `max="5"` ils deviennent des scores (valeur + jauge sur 5) |
 | `<s-flow>` + `<s-node sub="détail">Nom</s-node>` | non | Schéma en ligne, flèches ajoutées automatiquement |
 | `<s-roadmap>` + `<s-phase label="Phase 1">texte</s-phase>` | non | Phases reliées en pointillés |
+
+### Images
+
+```html
+<s-image src="images/console.png" alt="Console Cloud Run" caption="Tableau de bord du service."></s-image>
+```
+
+| Attribut | Effet |
+|---|---|
+| `src` | Chemin de l'image, relatif à `index.html` (ex. `images/schema.png`) ou URL complète |
+| `alt` | Description de l'image (obligatoire pour l'accessibilité) |
+| `caption` | Légende sous l'image (optionnel) |
+| `ratio="16/9"` | Force un format et recadre l'image (`4/3`, `1/1`, `21/9`...) |
+| `fit="contain"` | Avec `ratio` : affiche l'image entière au lieu de la recadrer |
+
+L'image ne dépasse jamais la hauteur de la slide. Sans `src`, ou si le fichier est introuvable, un cadre « À compléter » s'affiche à la place : si l'utilisateur n'a pas fourni d'image, écris `<s-image alt="Capture de la console"></s-image>` sans inventer de chemin. Pour une image à côté d'un texte, mets-la dans `<s-columns>` ; pour plusieurs images, dans `<s-grid>`.
 
 `highlight` met un élément en avant (noir) et passe les autres en gris.
 `quadrants="a | b | c | d"` : ordre haut-gauche, haut-droite, bas-gauche, bas-droite. La coupure est au milieu des axes, sauf si `x-split` / `y-split` la déplacent.
@@ -163,6 +180,8 @@ L'attribut `push` sur n'importe quel élément de `<s-top>` le pousse à droite,
 | Positionner des options sur deux critères (difficulté / prix, effort / impact) | `<s-scatter>` avec `quadrants` |
 | Le détail d'un coût | `<s-price>` |
 | Comparer des fonctionnalités | `<s-matrix>` |
+| Noter des options sur plusieurs critères | `<s-matrix max="5">` avec des chiffres |
+| Montrer une capture, un schéma, une photo | `<s-image>` |
 | Des specs chiffrées | `<s-table>` |
 | Un parcours de données ou une architecture | `<s-flow>` |
 | Un planning | `<s-roadmap>` |
@@ -212,6 +231,28 @@ L'attribut `push` sur n'importe quel élément de `<s-top>` le pousse à droite,
     GKE Autopilot  | 6 | 780
     Compute Engine | 7 | 290 | left
   </s-scatter>
+</s-slide>
+```
+
+**Notation**
+```html
+<s-slide tag="Notation">
+  <s-matrix highlight="GCP" max="5">
+    Critère     | GCP | AWS | Azure
+    Simplicité  | 4   | 3   | 3
+    Prix        | 4   | 3   | 3,5
+    Crédits     | oui | oui | non
+  </s-matrix>
+</s-slide>
+```
+
+**Image + texte**
+```html
+<s-slide tag="Console">
+  <s-columns>
+    <s-image src="images/console.png" alt="Console Cloud Run" ratio="16/9"></s-image>
+    <s-text>Métriques, logs et révisions au même endroit.</s-text>
+  </s-columns>
 </s-slide>
 ```
 
