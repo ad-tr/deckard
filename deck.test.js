@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { rows, toNumber, toAmount, isNumeric, niceMax, markOf, scoreOf } from './deck.js';
+import { parseRows, alignRows } from './edit.js';
 
 const block = (text) => ({ textContent: text });
 
@@ -94,5 +95,15 @@ describe('scoreOf', () => {
     expect(scoreOf('oui', 5)).toBeNull();
     expect(scoreOf('4', 0)).toBeNull();
     expect(scoreOf('4', NaN)).toBeNull();
+  });
+});
+
+describe('export de l\'éditeur', () => {
+  test('les colonnes sont alignées, la dernière n\'est pas complétée', () => {
+    expect(alignRows(parseRows('GCP | 1240\nAzure | 1395 | note'))).toEqual(['GCP   | 1240', 'Azure | 1395 | note']);
+  });
+
+  test('les lignes de séparation disparaissent', () => {
+    expect(alignRows(parseRows('| a | b |\n|---|---|\n| 1 | 2 |'))).toEqual(['a | b', '1 | 2']);
   });
 });

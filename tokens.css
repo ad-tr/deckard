@@ -1,5 +1,6 @@
-/* Tokens du deck : remplace ces valeurs par celles de ta maquette Figma. */
-:root {
+/* Tokens du deck : remplace ces valeurs par celles de ta maquette Figma.
+   Déclarés aussi sur s-deck pour que l'éditeur puisse redimensionner la scène. */
+:root, s-deck {
   --deck-frame: #b8b9b4;
   --deck-frame-size: 10px;
 

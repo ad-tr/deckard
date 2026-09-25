@@ -1,11 +1,33 @@
 /*
   Deckard : composants de présentation. Voir index.html pour l'usage de chacun.
-  API : deck.next(), deck.prev(), deck.go(index), deck.fit() (réajuste les slides après un changement de contenu)
+  API : deck.next(), deck.prev(), deck.go(index), deck.fit() (réajuste les slides après un changement de contenu),
+        deck.refresh() (après ajout ou retrait de slides), deck.edit() (ouvre ou ferme l'éditeur, touche « e »)
   Événement : "slidechange" avec detail { index, slide }
 */
 // Hors navigateur (tests avec bun), les composants ne sont pas déclarés
 const Base = globalThis.HTMLElement ?? class {};
 const el = (tag, className, text) => Object.assign(document.createElement(tag), { className, textContent: text ?? '' });
+
+// Source du deck avant rendu, utilisée par l'éditeur (edit.js, chargé à la demande).
+// Les modifications faites dans l'éditeur sont gardées dans le navigateur tant que index.html ne change pas.
+const SCRIPT_URL = globalThis.document?.currentScript?.src;
+const STORE_KEY = `deckard:${globalThis.location?.pathname}`;
+const hashText = (t) => [...t].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7).toString(36);
+const deckNode = globalThis.document?.querySelector('s-deck');
+if (deckNode) {
+  deckNode.fileHash = hashText(document.title + deckNode.outerHTML);
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null');
+    if (saved?.file === deckNode.fileHash) {
+      [...deckNode.attributes].forEach((a) => deckNode.removeAttribute(a.name));
+      saved.attrs.forEach(([name, value]) => deckNode.setAttribute(name, value));
+      deckNode.innerHTML = saved.html;
+      if (saved.title) document.title = saved.title;
+      deckNode.restored = true;
+    }
+  } catch { /* stockage indisponible : on garde le fichier */ }
+  deckNode.sourceHTML = deckNode.innerHTML;
+}
 
 // Composant simple : render(element) appelé une seule fois
 const define = (name, render) =>
@@ -373,17 +395,17 @@ class SDeck extends Base {
 
     this.progress = el('div', 's-progress');
     this.counter = el('div', 's-counter');
-    if (!this.hasAttribute('no-chrome')) this.after(this.progress);
-    if (this.hasAttribute('counter')) this.after(this.counter);
+    this.after(this.progress, this.counter);
+    if (!this.hasAttribute('no-edit')) this.#editButton();
 
     this.observer = new IntersectionObserver(this.#onIntersect, { root: this, rootMargin: '-45% 0px -45% 0px' });
-    this.slides.forEach((s) => this.observer.observe(s));
+    this.refresh();
 
     this.resizer = new ResizeObserver(() => this.fit());
     this.resizer.observe(this);
     document.fonts?.ready.then(() => this.fit());
     // Une image chargée (ou introuvable) change la hauteur de sa slide
-    const refit = (e) => e.target.localName === 'img' && fit(e.target.closest('s-slide'));
+    const refit = (e) => e.target.localName === 'img' && e.target.closest('s-slide') && fit(e.target.closest('s-slide'));
     this.addEventListener('load', refit, true);
     this.addEventListener('error', refit, true);
 
@@ -401,6 +423,18 @@ class SDeck extends Base {
     document.removeEventListener('keydown', this.#onKey);
     this.progress.remove();
     this.counter.remove();
+    this.editButton?.remove();
+  }
+
+  // À appeler quand des slides sont ajoutées, retirées ou remplacées
+  refresh() {
+    this.slides = [...this.querySelectorAll(':scope > s-slide')];
+    this.observer.disconnect();
+    this.slides.forEach((s) => this.observer.observe(s));
+    this.progress.hidden = this.hasAttribute('no-chrome');
+    this.counter.hidden = !this.hasAttribute('counter');
+    this.#updateCounter();
+    this.fit();
   }
 
   go(i, smooth = true) {
@@ -411,6 +445,41 @@ class SDeck extends Base {
   next() { this.go(this.index + 1); }
   prev() { this.go(this.index - 1); }
 
+  // Éditeur visuel : edit.js et edit.css sont chargés à la première ouverture
+  edit() {
+    if (globalThis.DeckardEditor) return globalThis.DeckardEditor.toggle(this);
+    if (this.loadingEditor) return;
+    this.loadingEditor = true;
+    const base = SCRIPT_URL ?? location.href;
+    const css = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: new URL('edit.css', base).href });
+    const js = Object.assign(document.createElement('script'), { src: new URL('edit.js', base).href });
+    css.dataset.deckardEditor = js.dataset.deckardEditor = '';
+    js.onload = () => css.sheet ? globalThis.DeckardEditor.toggle(this) : (css.onload = () => globalThis.DeckardEditor.toggle(this));
+    js.onerror = () => { this.loadingEditor = false; alert('Éditeur introuvable : edit.js doit être à côté de deck.js.'); };
+    document.head.append(css, js);
+  }
+
+  // Bouton discret en bas à gauche, visible quand la souris bouge
+  #editButton() {
+    const button = el('button', 's-edit-button', 'Éditer');
+    button.type = 'button';
+    button.title = 'Éditer la présentation (touche E)';
+    button.addEventListener('click', () => this.edit());
+    let timer;
+    document.addEventListener('pointermove', () => {
+      button.classList.add('visible');
+      clearTimeout(timer);
+      timer = setTimeout(() => button.classList.remove('visible'), 2200);
+    });
+    this.editButton = button;
+    this.after(button);
+  }
+
+  #updateCounter() {
+    const pad = (n) => String(n).padStart(2, '0');
+    this.counter.textContent = `${pad(Math.max(this.index, 0) + 1)} / ${pad(this.slides.length)}`;
+  }
+
   #onIntersect = (entries) => {
     for (const e of entries) {
       if (!e.isIntersecting) {
@@ -419,10 +488,11 @@ class SDeck extends Base {
       }
       e.target.setAttribute('data-active', '');
       const i = this.slides.indexOf(e.target);
-      if (i === this.index) continue;
+      const changed = i !== this.index || e.target !== this.current;
       this.index = i;
-      const pad = (n) => String(n).padStart(2, '0');
-      this.counter.textContent = `${pad(i + 1)} / ${pad(this.slides.length)}`;
+      this.current = e.target;
+      this.#updateCounter();
+      if (!changed) continue;
       history.replaceState(null, '', `#${i + 1}`);
       this.dispatchEvent(new CustomEvent('slidechange', { detail: { index: i, slide: e.target } }));
     }
@@ -444,6 +514,7 @@ class SDeck extends Base {
       ArrowUp: () => this.prev(), PageUp: () => this.prev(), k: () => this.prev(),
       ' ': () => (e.shiftKey ? this.prev() : this.next()),
       Home: () => this.go(0), End: () => this.go(this.slides.length - 1),
+      e: () => !this.hasAttribute('no-edit') && this.edit(),
       f: () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => {}),
     };
     const action = actions[e.key];

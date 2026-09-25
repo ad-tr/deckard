@@ -12,6 +12,7 @@ Tu vas écrire une présentation avec **Deckard**, une petite librairie de compo
 - `images/` : les images utilisées par les slides (optionnel).
 - `tokens.css` : couleurs, polices, tailles. Ne pas modifier sauf demande explicite.
 - `deck.css` / `deck.js` : la librairie. Ne jamais modifier.
+- `edit.css` / `edit.js` : l'éditeur visuel (touche `e`). Ne jamais modifier.
 
 ## Règles
 
@@ -282,6 +283,8 @@ L'image ne dépasse jamais la hauteur de la slide. Sans `src`, ou si le fichier 
 ## Navigation (à rappeler à l'utilisateur si besoin)
 
 Molette ou flèches, espace (Maj + espace pour reculer), `j` / `k`, `Home` / `End`, `f` pour le plein écran. L'URL suit la slide (`#4`). `Cmd + P` imprime une slide par page.
+
+**Mode édition** : touche `e` (ou bouton « Éditer » en bas à gauche). On y glisse des composants depuis la palette, on les déplace, on les remplace (lâcher au centre d'un composant), on modifie textes et réglages, on ajoute ou réordonne les slides, on dépose des images depuis le bureau. Tout est gardé dans le navigateur ; « Exporter » télécharge le nouvel `index.html`. `<s-deck no-edit>` désactive l'éditeur.
 
 ---
 

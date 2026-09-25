@@ -236,6 +236,17 @@ s-slide [reveal="none"], s-slide[data-active] [reveal] { opacity: 1; transform: 
 .s-progress { position: fixed; inset: 0 0 auto 0; height: 2px; z-index: 10; background: var(--deck-accent); transform-origin: left; transform: scaleX(var(--p, 0)); }
 .s-counter { position: fixed; right: calc(var(--deck-pad) + var(--deck-frame-size)); bottom: calc(var(--deck-pad) / 2); z-index: 10; font-family: var(--deck-font-body); font-size: var(--deck-size-small); color: var(--deck-muted); font-variant-numeric: tabular-nums; pointer-events: none; }
 
+/* Bouton « Éditer » : discret, visible quand la souris bouge */
+.s-edit-button {
+  position: fixed; left: calc(var(--deck-frame-size) + 1rem); bottom: calc(var(--deck-frame-size) + 1rem); z-index: 10;
+  padding: 0.55em 1.1em; border: 1px solid var(--deck-line); border-radius: var(--deck-radius-pill);
+  background: var(--deck-bg); color: var(--deck-fg); font: 500 0.8125rem/1 var(--deck-font-body); cursor: pointer;
+  opacity: 0; pointer-events: none; transition: opacity 300ms var(--deck-ease);
+}
+.s-edit-button.visible, .s-edit-button:focus-visible { opacity: 1; pointer-events: auto; }
+.s-edit-button:hover { border-color: var(--deck-fg); }
+@media (hover: none) { .s-edit-button { display: none; } }
+
 /* Petits écrans */
 @media (max-width: 40rem) {
   s-top s-fine { display: none; }
@@ -273,5 +284,5 @@ s-slide [reveal="none"], s-slide[data-active] [reveal] { opacity: 1; transform: 
   .s-point-label { opacity: 1; }
   .s-share-bar { clip-path: none; }
   .s-score-gauge::before { width: calc(var(--v) * 100%); }
-  .s-progress, .s-counter { display: none; }
+  .s-progress, .s-counter, .s-edit-button { display: none; }
 }
