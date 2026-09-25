@@ -72,6 +72,8 @@ Tu vas écrire une présentation avec **Deckard**, une petite librairie de compo
 
 Une slide a trois zones : **en-tête** en haut, **contenu** au milieu, **pied** (`<s-foot>`) en bas.
 
+Une slide fait **toujours exactement la taille de l'écran**. Les tailles de texte suivent l'écran. Si le contenu est trop haut, il est réduit automatiquement pour tenir : c'est un filet de sécurité, pas une raison de surcharger une slide.
+
 ### Attributs de `<s-deck>`
 
 | Attribut | Effet |
@@ -167,7 +169,7 @@ L'image ne dépasse jamais la hauteur de la slide. Sans `src`, ou si le fichier 
 
 `highlight` met un élément en avant (noir) et passe les autres en gris.
 `quadrants="a | b | c | d"` : ordre haut-gauche, haut-droite, bas-gauche, bas-droite. La coupure est au milieu des axes, sauf si `x-split` / `y-split` la déplacent.
-`| left` en 4e colonne de `<s-scatter>` place le nom à gauche du point (pour éviter un chevauchement).
+`| left` en 4e colonne de `<s-scatter>` place le nom à gauche du point (pour éviter un chevauchement). Près du bord droit, le nom passe à gauche tout seul ; `| right` force la droite.
 
 ## Quel composant choisir
 

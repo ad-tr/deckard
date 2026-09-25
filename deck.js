@@ -1,6 +1,6 @@
 /*
   Deckard : composants de présentation. Voir index.html pour l'usage de chacun.
-  API : deck.next(), deck.prev(), deck.go(index)
+  API : deck.next(), deck.prev(), deck.go(index), deck.fit() (réajuste les slides après un changement de contenu)
   Événement : "slidechange" avec detail { index, slide }
 */
 // Hors navigateur (tests avec bun), les composants ne sont pas déclarés
@@ -251,7 +251,8 @@ define('s-scatter', (c) => {
   data.forEach(({ label, x, y, side }, i) => {
     const point = el('div', 's-point');
     if (highlight) point.classList.add(label === highlight ? 'hl' : 'dim');
-    if (side === 'left') point.classList.add('left');
+    // Près du bord droit, le nom passe à gauche du point pour ne pas sortir du graphique
+    if (side === 'left' || (side !== 'right' && x / xMax > 0.72)) point.classList.add('left');
     point.style.setProperty('--j', i);
     const dot = el('span', 's-point-dot');
     dot.title = `${label} : ${c.getAttribute('x') ?? 'x'} ${format(x)}, ${c.getAttribute('y') ?? 'y'} ${format(y)}`;
@@ -345,6 +346,24 @@ define('s-slide', (slide) => {
   });
 });
 
+// Une slide fait toujours un écran : si le contenu dépasse, il est réduit (zoom) jusqu'à tenir
+const fit = (slide) => {
+  const body = slide.querySelector(':scope > s-body');
+  if (!body) return;
+  slide.setAttribute('data-measuring', '');
+  let zoom = 1;
+  body.style.setProperty('--fit', zoom);
+  // Le contenu se réorganise quand il rétrécit, d'où quelques passes
+  for (let pass = 0; pass < 4 && body.clientHeight > 0; pass++) {
+    const overflow = body.scrollHeight / body.clientHeight;
+    if (overflow <= 1.002) break;
+    zoom = Math.max(0.5, zoom / overflow);
+    body.style.setProperty('--fit', zoom);
+  }
+  if (zoom === 1) body.style.removeProperty('--fit');
+  slide.removeAttribute('data-measuring');
+};
+
 class SDeck extends Base {
   index = -1;
 
@@ -360,6 +379,14 @@ class SDeck extends Base {
     this.observer = new IntersectionObserver(this.#onIntersect, { root: this, rootMargin: '-45% 0px -45% 0px' });
     this.slides.forEach((s) => this.observer.observe(s));
 
+    this.resizer = new ResizeObserver(() => this.fit());
+    this.resizer.observe(this);
+    document.fonts?.ready.then(() => this.fit());
+    // Une image chargée (ou introuvable) change la hauteur de sa slide
+    const refit = (e) => e.target.localName === 'img' && fit(e.target.closest('s-slide'));
+    this.addEventListener('load', refit, true);
+    this.addEventListener('error', refit, true);
+
     this.addEventListener('scroll', this.#onScroll, { passive: true });
     document.addEventListener('keydown', this.#onKey);
 
@@ -370,6 +397,7 @@ class SDeck extends Base {
 
   disconnectedCallback() {
     this.observer.disconnect();
+    this.resizer.disconnect();
     document.removeEventListener('keydown', this.#onKey);
     this.progress.remove();
     this.counter.remove();
@@ -379,6 +407,7 @@ class SDeck extends Base {
     const target = this.slides[Math.max(0, Math.min(i, this.slides.length - 1))];
     target?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'start' });
   }
+  fit() { this.slides.forEach(fit); }
   next() { this.go(this.index + 1); }
   prev() { this.go(this.index - 1); }
 

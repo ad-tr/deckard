@@ -23,16 +23,20 @@
   --deck-font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --deck-font-code: ui-monospace, Menlo, monospace;
 
-  --deck-size-title: clamp(3rem, 11vw, 10rem);
-  --deck-size-heading: clamp(2.25rem, 6vw, 5.5rem);
-  --deck-size-stat: clamp(1.75rem, 3.2vw, 3rem);
-  --deck-size-body: clamp(0.95rem, 1.2vw, 1.125rem);
-  --deck-size-small: 0.8125rem;
-  --deck-size-fine: 0.625rem;
+  /* Unité fluide : 1/100e de la plus grande zone 16:9 qui tient dans l'écran.
+     Les tailles suivent l'écran pour qu'une slide ait le même rendu partout. */
+  --deck-u: min(1vw, 1.778dvh);
+
+  --deck-size-title: clamp(2.75rem, 9.5 * var(--deck-u), 12rem);
+  --deck-size-heading: clamp(2rem, 5.2 * var(--deck-u), 7rem);
+  --deck-size-stat: clamp(1.75rem, 3.6 * var(--deck-u), 4.75rem);
+  --deck-size-body: clamp(0.95rem, 1.3 * var(--deck-u), 1.6rem);
+  --deck-size-small: clamp(0.78rem, 0.95 * var(--deck-u), 1.2rem);
+  --deck-size-fine: clamp(0.625rem, 0.72 * var(--deck-u), 0.9rem);
   --deck-tracking-display: -0.035em;
 
-  --deck-pad: clamp(1.25rem, 3.5vw, 3.5rem);
-  --deck-gap: clamp(1rem, 2.5vw, 2.5rem);
+  --deck-pad: clamp(1.25rem, 3.5 * var(--deck-u), 4.5rem);
+  --deck-gap: clamp(1rem, 2.4 * var(--deck-u), 3rem);
   --deck-max: 90rem;
   --deck-radius: 0;
   --deck-radius-pill: 999px;
